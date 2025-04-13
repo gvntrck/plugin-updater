@@ -1,0 +1,149 @@
+/**
+ * Estilos para a página de administração do Atualizador de Plugins GVNTRCK
+ */
+
+.gvntrck-updater-admin {
+    margin: 20px 0;
+}
+
+.gvntrck-updater-intro {
+    margin-bottom: 20px;
+}
+
+.gvntrck-updater-table-container {
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.gvntrck-plugins-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gvntrck-plugins-table th {
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+}
+
+.gvntrck-plugins-table td {
+    padding: 15px 12px;
+    vertical-align: middle;
+}
+
+.gvntrck-plugins-table .column-name {
+    width: 25%;
+}
+
+.gvntrck-plugins-table .column-version,
+.gvntrck-plugins-table .column-remote-version {
+    width: 12%;
+}
+
+.gvntrck-plugins-table .column-repo {
+    width: 20%;
+}
+
+.gvntrck-plugins-table .column-status {
+    width: 15%;
+}
+
+.gvntrck-plugins-table .column-actions {
+    width: 15%;
+    text-align: right;
+}
+
+.gvntrck-plugins-table tr.has-update {
+    background-color: rgba(46, 162, 204, 0.08);
+}
+
+.gvntrck-plugins-table .na {
+    color: #999;
+}
+
+.gvntrck-plugins-table .release-date {
+    color: #777;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.gvntrck-plugins-table .error-details {
+    margin-left: 8px;
+    cursor: help;
+}
+
+.gvntrck-plugins-table .error-details .dashicons {
+    color: #dc3232;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    vertical-align: text-bottom;
+}
+
+/* Status Pills */
+.status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.status-pill.up-to-date {
+    background-color: #ecf7ed;
+    color: #2a8d46;
+}
+
+.status-pill.update-available {
+    background-color: #e6f2f8;
+    color: #0073aa;
+}
+
+.status-pill.warning {
+    background-color: #fef8ee;
+    color: #e29603;
+}
+
+.status-pill.error {
+    background-color: #fbeaea;
+    color: #dc3232;
+}
+
+.gvntrck-updater-footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-style: italic;
+}
+
+/* Loading spinner for update checks */
+.check-update-button.loading {
+    position: relative;
+    padding-right: 30px;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.check-update-button.loading::after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: #000;
+    animation: gvntrck-spinner 0.8s linear infinite;
+}
+
+@keyframes gvntrck-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
