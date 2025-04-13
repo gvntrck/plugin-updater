@@ -39,7 +39,11 @@ if (!class_exists('GVNTRCK_Updater')) {
             $all_plugins = get_plugins();
             $this->gvntrck_plugins = array();
             
+            // Depuração: Registrar todos os plugins e seus autores
+            error_log('GVNTRCK Updater - Plugins encontrados: ' . count($all_plugins));
             foreach ($all_plugins as $plugin_file => $plugin_data) {
+                error_log('Plugin: ' . $plugin_data['Name'] . ' | Autor: ' . (isset($plugin_data['Author']) ? $plugin_data['Author'] : 'Não definido'));
+                
                 // Verifica se o autor contém "gvntrck"
                 if (isset($plugin_data['Author']) && (stripos($plugin_data['Author'], 'gvntrck') !== false)) {
                     // Guarda informações importantes para atualização

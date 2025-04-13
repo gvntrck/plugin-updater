@@ -26,7 +26,7 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
             add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
             
             // Adiciona link para as configurações na listagem de plugins
-            add_filter('plugin_action_links_gvntrck-plugin-updater/gvntrck-plugin-updater.php', array($this, 'add_settings_link'));
+            add_filter('plugin_action_links_gvn-updater/gvntrck-plugin-updater.php', array($this, 'add_settings_link'));
             
             // Inicializa a instância do atualizador
             $this->updater = new GVNTRCK_Updater();
@@ -55,8 +55,17 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
                 wp_die(__('Você não tem permissões suficientes para acessar esta página.', 'gvntrck-updater'));
             }
             
+            // Forçar o carregamento de plugins
+            $this->updater->load_gvntrck_plugins();
+            
             // Carrega os plugins GVNTRCK
             $gvntrck_plugins = $this->updater->get_gvntrck_plugins();
+            
+            // Depuração: Verificar os plugins carregados
+            error_log('GVNTRCK Admin - Plugins carregados: ' . count($gvntrck_plugins));
+            foreach ($gvntrck_plugins as $plugin_file => $plugin_data) {
+                error_log('Admin Plugin: ' . $plugin_data['name'] . ' | Arquivo: ' . $plugin_file);
+            }
             
             // Verifica se existem novidades para cada plugin
             $plugins_with_updates = array();
