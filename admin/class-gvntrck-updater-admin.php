@@ -226,6 +226,25 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
         }
         
         /**
+         * Obtém um nome de exibição amigável para o repositório a partir da URL
+         * 
+         * @param string $repo_url URL do repositório
+         * @return string Nome de exibição do repositório
+         */
+        private function get_repo_display_name($repo_url) {
+            if ($this->is_github_url($repo_url)) {
+                $github_data = $this->parse_github_url($repo_url);
+                if (!empty($github_data)) {
+                    return $github_data['owner'] . '/' . $github_data['repo'];
+                }
+            }
+            
+            // Se não for uma URL do GitHub ou não conseguir analisar, retorna a URL original
+            $parsed_url = parse_url($repo_url);
+            return !empty($parsed_url['host']) ? $parsed_url['host'] : $repo_url;
+        }
+        
+        /**
          * Limpa uma string de versão removendo 'v' ou outros prefixos
          * 
          * @param string $version String da versão
