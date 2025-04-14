@@ -9,8 +9,19 @@
 <div class="wrap gvntrck-updater-admin">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
     
+    <?php if (isset($cache_cleared) && $cache_cleared) : ?>
+        <div class="notice notice-success is-dismissible">
+            <p><?php _e('Cache de atualizações limpo com sucesso!', 'gvntrck-updater'); ?></p>
+        </div>
+    <?php endif; ?>
+    
     <div class="gvntrck-updater-intro">
         <p><?php _e('Este painel lista todos os plugins de autoria "gvntrck" instalados neste site, e mostra informações sobre atualizações disponíveis no GitHub.', 'gvntrck-updater'); ?></p>
+        <p>
+            <a href="<?php echo esc_url(admin_url('plugins.php?page=gvntrck-updater&gvntrck_clear_cache=1')); ?>" class="button">
+                <span class="dashicons dashicons-update"></span> <?php _e('Limpar Cache de Atualizações', 'gvntrck-updater'); ?>
+            </a>
+        </p>
     </div>
     
     <?php if (empty($gvntrck_plugins)) : ?>

@@ -55,6 +55,9 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
                 wp_die(__('Você não tem permissões suficientes para acessar esta página.', 'gvntrck-updater'));
             }
             
+            // Verifica se o cache foi limpo
+            $cache_cleared = isset($_GET['cache_cleared']) ? true : false;
+            
             // Forçar o carregamento de plugins
             $this->updater->load_gvntrck_plugins();
             
@@ -153,9 +156,12 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
          * @param string $hook Sufixo da página atual
          */
         public function enqueue_admin_assets($hook) {
-            if ($hook !== 'plugins_page_gvntrck-updater') {
+            // Só carrega na página de administração do plugin
+            if ($hook != 'plugins_page_gvntrck-updater') {
                 return;
             }
+            
+            // Adiciona script para verificação de atualizações via AJAX
             
             // Registra e enfileira o CSS
             wp_register_style(
@@ -182,7 +188,8 @@ if (!class_exists('GVNTRCK_Updater_Admin')) {
                 'nonce' => wp_create_nonce('gvntrck_updater_nonce'),
                 'checkingText' => __('Verificando atualizações...', 'gvntrck-updater'),
                 'updateAvailableText' => __('Atualização disponível!', 'gvntrck-updater'),
-                'noUpdateText' => __('Nenhuma atualização disponível', 'gvntrck-updater')
+                'noUpdateText' => __('Nenhuma atualização disponível', 'gvntrck-updater'),
+                'errorText' => __('Erro ao verificar atualizações', 'gvntrck-updater')
             ));
         }
         

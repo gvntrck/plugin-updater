@@ -14,6 +14,13 @@ if (!class_exists('GVNTRCK_Updater')) {
          * @var array
          */
         private $gvntrck_plugins = array();
+        
+        /**
+         * Nome do transiente usado para armazenar informações de atualização
+         *
+         * @var string
+         */
+        private $transient_name = 'gvntrck_updater_cache';
 
         /**
          * Inicializa o atualizador
@@ -26,6 +33,12 @@ if (!class_exists('GVNTRCK_Updater')) {
             
             // Carrega os plugins na inicialização
             add_action('admin_init', array($this, 'load_gvntrck_plugins'));
+            
+            // Adiciona ação para limpar o cache de atualizações
+            add_action('admin_init', array($this, 'maybe_clear_update_cache'));
+            
+            // Adiciona ação para o AJAX de verificação manual de atualizações
+            add_action('wp_ajax_gvntrck_check_updates', array($this, 'ajax_check_updates'));
         }
         
         /**
@@ -72,6 +85,23 @@ if (!class_exists('GVNTRCK_Updater')) {
                 return $transient;
             }
             
+            // Verifica se já temos um cache válido
+            $cache = get_site_transient($this->transient_name);
+            if ($cache !== false && is_object($cache) && isset($cache->last_checked) && (time() - $cache->last_checked) < GVNTRCK_UPDATER_CHECK_INTERVAL) {
+                // Se o cache for válido, aplica as atualizações do cache
+                if (isset($cache->updates) && is_array($cache->updates)) {
+                    foreach ($cache->updates as $plugin_file => $update_data) {
+                        $transient->response[$plugin_file] = $update_data;
+                    }
+                }
+                return $transient;
+            }
+            
+            // Inicializa o objeto de cache
+            $cache = new stdClass();
+            $cache->last_checked = time();
+            $cache->updates = array();
+            
             foreach ($this->gvntrck_plugins as $plugin_file => $plugin_data) {
                 // Pula se não houver URI do plugin
                 if (empty($plugin_data['plugin_uri']) || !$this->is_github_url($plugin_data['plugin_uri'])) {
@@ -93,12 +123,18 @@ if (!class_exists('GVNTRCK_Updater')) {
                     $response->plugin = $plugin_file;
                     $response->new_version = $this->clean_version($github_info->tag_name);
                     $response->url = $plugin_data['plugin_uri'];
-                    $response->package = isset($github_info->zipball_url) ? $github_info->zipball_url : '';
+                    $response->package = $github_info->zipball_url;
                     
                     // Adiciona ao transient
                     $transient->response[$plugin_file] = $response;
+                    
+                    // Armazena no cache
+                    $cache->updates[$plugin_file] = $response;
                 }
             }
+            
+            // Atualiza o cache
+            set_site_transient($this->transient_name, $cache, GVNTRCK_UPDATER_CHECK_INTERVAL);
             
             return $transient;
         }
@@ -302,6 +338,87 @@ if (!class_exists('GVNTRCK_Updater')) {
          */
         public function get_gvntrck_plugins() {
             return $this->gvntrck_plugins;
+        }
+        
+        /**
+         * Limpa o cache de atualizações se solicitado via parâmetro GET
+         */
+        public function maybe_clear_update_cache() {
+            if (isset($_GET['gvntrck_clear_cache']) && current_user_can('manage_options')) {
+                $this->clear_update_cache();
+                
+                // Redireciona de volta para a página de administração
+                if (wp_safe_redirect(admin_url('plugins.php?page=gvntrck-updater&cache_cleared=1'))) {
+                    exit;
+                }
+            }
+        }
+        
+        /**
+         * Limpa o cache de atualizações
+         */
+        public function clear_update_cache() {
+            delete_site_transient('update_plugins');
+            delete_site_transient($this->transient_name);
+            return true;
+        }
+        
+        /**
+         * Manipula solicitações AJAX para verificação manual de atualizações
+         */
+        public function ajax_check_updates() {
+            // Verifica nonce e permissões
+            if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'gvntrck_updater_nonce') || !current_user_can('manage_options')) {
+                wp_send_json_error(array('message' => __('Erro de segurança. Recarregue a página e tente novamente.', 'gvntrck-updater')));
+            }
+            
+            // Limpa o cache de atualizações
+            $this->clear_update_cache();
+            
+            // Força a verificação de atualizações
+            $this->load_gvntrck_plugins();
+            $plugin_file = isset($_POST['plugin_file']) ? sanitize_text_field($_POST['plugin_file']) : '';
+            
+            if (empty($plugin_file) || !isset($this->gvntrck_plugins[$plugin_file])) {
+                wp_send_json_error(array('message' => __('Plugin não encontrado.', 'gvntrck-updater')));
+            }
+            
+            $plugin_data = $this->gvntrck_plugins[$plugin_file];
+            
+            // Verifica se há atualizações disponíveis
+            if (empty($plugin_data['plugin_uri']) || !$this->is_github_url($plugin_data['plugin_uri'])) {
+                wp_send_json_error(array('message' => __('Este plugin não tem um repositório GitHub válido.', 'gvntrck-updater')));
+            }
+            
+            // Obtém informações do GitHub
+            $github_info = $this->get_github_plugin_info($plugin_data['plugin_uri']);
+            
+            if (is_wp_error($github_info)) {
+                wp_send_json_error(array('message' => $github_info->get_error_message()));
+            }
+            
+            if (empty($github_info)) {
+                wp_send_json_error(array('message' => __('Não foi possível obter informações do GitHub.', 'gvntrck-updater')));
+            }
+            
+            // Verifica se há uma versão mais recente
+            $has_update = false;
+            $remote_version = '';
+            $published_at = '';
+            
+            if (isset($github_info->tag_name)) {
+                $remote_version = $github_info->tag_name;
+                $has_update = $this->is_newer_version($remote_version, $plugin_data['version']);
+                $published_at = isset($github_info->published_at) ? date_i18n(get_option('date_format'), strtotime($github_info->published_at)) : '';
+            }
+            
+            // Retorna os resultados
+            wp_send_json_success(array(
+                'has_update' => $has_update,
+                'remote_version' => $remote_version,
+                'published_at' => $published_at,
+                'message' => $has_update ? __('Atualização disponível!', 'gvntrck-updater') : __('Nenhuma atualização disponível.', 'gvntrck-updater')
+            ));
         }
     }
 }

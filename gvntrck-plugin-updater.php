@@ -3,7 +3,7 @@
  * Plugin Name: Atualizador de Plugins GVNTRCK
  * Plugin URI: https://github.com/gvntrck/plugin-updater
  * Description: Atualizador automático para plugins personalizados com autor "gvntrck"
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: gvntrck
  * Author URI: https://github.com/gvntrck
  * License: GPL-2.0+
@@ -17,8 +17,9 @@ if (!defined('WPINC')) {
 }
 
 // Define constantes do plugin
-define('GVNTRCK_UPDATER_VERSION', '1.0.3');
+define('GVNTRCK_UPDATER_VERSION', '1.0.4');
 define('GVNTRCK_UPDATER_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('GVNTRCK_UPDATER_CHECK_INTERVAL', 12 * HOUR_IN_SECONDS);
 define('GVNTRCK_UPDATER_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // Carrega as classes do plugin
